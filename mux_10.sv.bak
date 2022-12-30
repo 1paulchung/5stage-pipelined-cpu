@@ -1,0 +1,14 @@
+module mux10_5 (inputA, inputB, select, out);
+	input logic [4:0] inputA, inputB;
+	input logic sel;
+	output logic [4:0] out;
+
+	genvar i;
+	
+	generate 
+		for (i = 0; i < 5; i++) begin : eachRouteMux
+			mux_2 aMux (.in({inputA[i], inputB[i]}), .sel(sel), .out(out[i]));
+		end
+	endgenerate 
+
+endmodule

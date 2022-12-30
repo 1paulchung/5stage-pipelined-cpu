@@ -1,0 +1,11 @@
+module EXMEMPipeReg(.clk, .reset, .alu_result, .Db, .MemWrite, .MemRead, .xfer_size, .noBrPC, .BL_op, .WriteData_or_noBrPC);
+
+	input logic clk, reset, MemWrite, MemRead, BL_op;
+	input logic [63:0] alu_result, Db, noBrPC, WriteData_or_noBrPC;
+	input logic [3:0] xfer_size;
+	
+	output logic memMemWrite, memMemRead, memBL_op;
+	output logic [63:0] memalu_result, memDb, memnoBrPC, memWriteData_or_noBrPC;
+	output logic [3:0] memxfer_size;
+
+endmodule

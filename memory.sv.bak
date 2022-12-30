@@ -1,0 +1,13 @@
+module memory(clk, alu_result, MemWrite, MemRead, Db, xfer_size, read_data);
+
+	input logic clk, MemWrite, MemRead, ;
+	input logic [63:0] alu_result, Db;
+	input logic [4:0] xfer_size;
+	
+	output logic [63:0] read_data;
+
+	// Data memory that was provided from the instructing team. 
+	datamem dataMemory (.address(alu_result), .write_enable(MemWrite), .read_enable(MemRead), .write_data(Db), .clk, .xfer_size(xfer_size), .read_data);
+	
+
+endmodule

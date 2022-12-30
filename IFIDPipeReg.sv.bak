@@ -1,0 +1,13 @@
+module IFIDPipeReg (.clk, .reset, .instruction, .noBrPC, .Rd_or_X30);
+	
+	input logic clk, reset;
+	input logic [31:0] instruction;
+	input logic [63:0] noBrPC;
+	input logic [4:0] Rd_or_X30;
+	
+	output logic [31:0] decInstruction;
+	output logic [63:0] decnoBrPC;
+	output logic [4:0] write
+	
+
+endmodule

@@ -1,0 +1,14 @@
+module writeBack(alu_result, read_data, MemtoReg, noBrPC, BL_op, WriteData_or_noBrPC);
+
+	input logic [63:0] alu_result, read_data, noBrPC;
+	input logic MemtoReg, BL_op;
+	
+	output logic [63:0] WriteData_or_noBrPC;
+
+	// Select alu_result or read_Data where selector is MemtoReg. Output is WriteData.
+	mux_128 largeMux1 (.input0(alu_result), .input1(read_data), .select(MemtoReg), .out(WriteData));
+	
+	// Select WriteData or noBrPC where selector is BL_op. Output is WriteData_or_noBrPC. This is the Write Register data.
+	mux_128 mux1 (.input0(WriteData), .input1(noBrPC), .select(BL_op), .out(WriteData_or_noBrPC));
+
+endmodule

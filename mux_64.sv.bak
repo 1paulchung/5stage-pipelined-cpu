@@ -1,0 +1,13 @@
+module mux_64 (in, sel, out);
+	input logic [31:0] in;
+	input logic [4:0] sel;
+	output logic out;
+	
+	wire [1:0] w;
+	
+	// 2 16:1 multiplexers creates 32 input lines and a single
+	// 2:1 multiplexer selects which of the two 16:1 muxes to output
+	mux_16 mux_1 (.in(in[15:0]), .sel(sel[3:0]), .out(w[0]));
+	mux_16 mux_2 (.in(in[31:16]), .sel(sel[3:0]), .out(w[1]));
+	mux_2  mux_3 (.in(w[1:0]), .sel(sel[4]), .out(out));  
+endmodule 
