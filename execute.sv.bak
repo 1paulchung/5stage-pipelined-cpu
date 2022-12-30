@@ -1,0 +1,22 @@
+module execute(Da, Db, ALUOp, alu_result, is_neg, is_zero, is_overflow, is_carryOut, DAddr_Imm_out, ALUSrc, ex_DAddr9, Imm12, immediate);
+
+	input logic [63:0] Da, Db, ex_DAddr9;
+	input logic ALUSrc, immediate;
+	input logic [11:0] Imm12, 
+	
+	logic output [63:0] alu_result, DAddr_Imm_out
+	logic output is_neg, is_zero, is_overflow, is_carryOut
+	
+	logic [63:0] muxDataB;
+
+	// Select ex_DAddr9 or extended Imm12 where selector is immediate. Output is DAddr_Imm_out.
+	mux_128 largeMux (.input0(ex_DAddr9), .input1({{52{1'b0}}, Imm12}), .select(immediate), .out(DAddr_Imm_out));
+	
+	// Select Db or DAddr_Imm_out where selector is ALUSrc. Output is muxDataB.
+	mux_128 largeMux0 (.input0(Db), .input1(DAddr_Imm_out), .select(ALUSrc), .out(muxDataB));
+	
+	// Declare ALU that performs operations from Lab 2
+	alu theALU (.A(Da), .B(muxDataB), .cntrl(ALUOp), .result(alu_result), .negative(is_neg), .zero(is_zero), .overflow(is_overflow), .carry_out(is_carryOut));
+	
+
+endmodule

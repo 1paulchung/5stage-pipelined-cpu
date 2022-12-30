@@ -1,0 +1,16 @@
+module DFF_enable (q, d, en, clk);
+	input logic d, en, clk;
+	output logic q;
+	logic outFromMux;
+	logic [1:0] in;
+	
+	assign in[0] = q;
+	assign in[1] = d;
+
+	//Create a flip flop from the submodule D_FF
+	D_FF d0 (.q(q), .d(outFromMux), .reset(1'b0), .clk);
+	
+	//Create a MUX through the submodule mux2_1
+	mux_2 theMux (.in(in[1:0]), .sel(en), .out(outFromMux));
+	
+endmodule 

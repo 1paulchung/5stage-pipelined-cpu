@@ -1,0 +1,14 @@
+`timescale 10ps/1fs // Not 100% sure what this does
+
+module decoder_2 (in, out, en);
+	input logic in, en;
+	output logic [1:0] out;
+	
+	// "wire" is used to connect input and output ports of a module instantiation together with some other element in your design
+	wire w;
+	
+	not #5 not1 (w, in);
+	and #5 and1 (out[0], en, w);
+	and #5 and2 (out[1], en, in);
+
+endmodule

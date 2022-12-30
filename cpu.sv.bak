@@ -1,0 +1,92 @@
+// Top level module for a 64-bit ARM single-cycle CPU.
+module cpu(clk, reset);
+	input logic clk, reset; // clock and reset
+	
+	logic [31:0] instruction; // instruction
+	
+	// ALU flags and signals
+	logic overflow, negative, zero, carry_out, is_neg, is_zero, is_overflow, is_carryOut;
+	
+	/* Da: data in Rn or Read Reg 1
+	 * Db: data in Rm (Rd when Reg2Loc = 0) or Read Reg 2
+	 * Writedata: data to be written to write register
+	 * muxDataB: output of mux between Db and DAddr_Imm_out where ALUSrc is selector
+	 * ex_DaAddr9: extended DAddr
+	 * alu_result: result of ALU
+	 * DAddr_Imm_out: output of mux between DAddr9 and Imm12 where immediate is selector
+	 * noBrPC: PC + 4
+	 * WriteData_or_noBrPC: output of mux between noBrPC and WriteData where BL_op is selector
+	 */
+	logic [63:0] Da, Db, WriteData, muxDataB, ex_DAddr9, alu_result, DAddr_Imm_out, noBrPC, WriteData_or_noBrPC;
+	
+	// Parts of instruction 
+	logic [4:0] Rd, Rn, Rm, Rm_or_Rd, Rd_or_X30;
+	logic [5:0] shmat; 
+	logic [11:0] Imm12; 
+	logic [8:0] DAddr9; 
+	logic [25:0] BrAddr26; 
+	logic [18:0] CondAddr19;
+	logic [3:0] xfer_size;
+	
+		// Assign names for parts within an instruction
+	assign Rd = instruction[4:0]; // can also be considered as Rt (depending on instruction ex. CBZ)
+	assign Rn = instruction[9:5]; // Read Register 1
+	assign Rm = instruction[20:16]; // Read Register 2 (sometimes Rd)
+	assign shamt = instruction[15:10]; // 00
+	assign Imm12 = instruction[21:10]; // Immediate
+	assign DAddr9 = instruction[20:12]; // DT_address (offset for D-type instructions)
+	assign BrAddr26 = instruction[25:0]; // Branch address
+	assign CondAddr19 = instruction[23:5]; // Conditional branch address 
+	
+	// Control signal declarations
+	logic [10:0] opcode;
+	logic [2:0] ALUOp;
+	logic Reg2Loc, UncondBr, BrTaken, MemRead, MemtoReg, MemWrite, ALUSrc, RegWrite, Flag, immediate, BL_op, BR_op;
+	assign opcode = instruction[31:21];
+	
+	// Indicate zero, negative, carry_out, and overflow only if operation asks to
+	DFF_enable checkZero (.q(zero), .d(is_zero), .en(Flag), .clk);
+	DFF_enable checkNegative (.q(negative), .d(is_neg), .en(Flag), .clk);
+	DFF_enable checkCarryOut (.q(carry_out), .d(is_carryOut), .en(Flag), .clk);
+	DFF_enable checkOverflow (.q(overflow), .d(is_overflow), .en(Flag), .clk);
+
+	// Declare control unit
+	control controlModule (.clk, .reset, .opcode, .ALUOp, .Reg2Loc, .UncondBr, .BrTaken, .MemRead, .MemtoReg, .MemWrite, .ALUSrc, .RegWrite, .Flag, .overflow(overflow), .negative(negative), .immediate, .xfer_size, .is_zero, .BL_op, .BR_op);
+	
+	// Instruction fetch
+	fetchInstruct getInstruction (.clk, .reset, .instruction, .brTaken(BrTaken), .UncondBr(UncondBr), .noBrPC, .BR_op, .Db);
+	
+	// If Reg2Loc is 0, output is Rd. If Reg2Loc is 1, output is Rm.
+	mux_10 aMux (.input0(Rd), .input1(Rm), .select(Reg2Loc), .out(Rm_or_Rd));
+	
+	// Select between Rd and X30 for data to WriteRegister. 
+	//	Select between WriteData and noBrPC for address to WriteRegister
+	// If BL_op is 0, then WriteData register = Rd and address = WriteData
+	// If BL_op is 1, then WriteData register = 0 and address = noBrPC
+	mux_10 mux0 (.input0(Rd), .input1(5'b11110), .select(BL_op), .out(Rd_or_X30));
+	mux_128 mux1 (.input0(WriteData), .input1(noBrPC), .select(BL_op), .out(WriteData_or_noBrPC));
+	
+	// Register file
+	regfile registerFile (.ReadData1(Da), .ReadData2(Db), .WriteData(WriteData_or_noBrPC), .ReadRegister1(Rn), .ReadRegister2(Rm_or_Rd), .WriteRegister(Rd_or_X30), .RegWrite(RegWrite), .clk);
+	
+	// Mux to choose between extended DAddr9 or Imm12 with immediate as selector.
+	// DAddr_Imm_out = (extended) Imm12 if immediate = 1, DAddr_Imm_out = ex_Daddr9 if immediate = 0.
+	signExtend #(.N(9)) extendDAddr9 (.in(DAddr9), .out(ex_DAddr9));
+	mux_128 largeMux (.input0(ex_DAddr9), .input1({{52{1'b0}}, Imm12}), .select(immediate), .out(DAddr_Imm_out));
+	
+	// Select between DAddr_Imm_out and Db where ALUSrc is the control and muxDataB is output.
+	// If ALUSrc is 0, muxDataB = Db. If ALUSrc is 1, muxDataB = DAddr_Imm_out.
+	mux_128 largeMux0 (.input0(Db), .input1(DAddr_Imm_out), .select(ALUSrc), .out(muxDataB));
+	
+	// Data memory
+	logic [63:0] read_data;
+	datamem dataMemory (.address(alu_result), .write_enable(MemWrite), .read_enable(MemRead), .write_data(Db), .clk, .xfer_size(xfer_size), .read_data);
+	
+	// Declare datapath
+	alu theALU (.A(Da), .B(muxDataB), .cntrl(ALUOp), .result(alu_result), .negative(is_neg), .zero(is_zero), .overflow(is_overflow), .carry_out(is_carryOut));
+	
+	// Select between ALU result and read data from datamem where MemtoReg is selector.
+	// If MemtoReg is 0, WriteData = alu_result. If MemtoRg = 1, WriteData = read_data.
+	mux_128 largeMux1 (.input0(alu_result), .input1(read_data), .select(MemtoReg), .out(WriteData));
+
+endmodule
