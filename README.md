@@ -7,8 +7,8 @@ Five-stage pipelined CPU written in SystemVerilog. The image below shows the com
 The folder "benchmarks" contains instructions written in machine code, and the CPU converts the machine code into an instruction. 
 The code can be tested in ModelSim by running "do runlab.do". 
 
-Below are the following instructions that the pipelined CPU supports.
+Below are the following instructions that the pipelined CPU supports. All benchmarks except fibonacci running 100% correctly.
 
-<img width="284" alt="image" src="https://user-images.githubusercontent.com/72935428/210109760-7eaa4910-b908-4983-b7d2-a1e20b3bbeec.png">
+<img width="528" alt="image" src="https://user-images.githubusercontent.com/72935428/210109760-7eaa4910-b908-4983-b7d2-a1e20b3bbeec.png">
 
 
