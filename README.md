@@ -4,3 +4,5 @@ Five-stage pipelined CPU written in SystemVerilog. The image below shows the com
 
 ![image](https://user-images.githubusercontent.com/72935428/210109509-f4e97ad3-6d55-41d6-824c-8d7d5b98858c.png)
 
+The folder "benchmarks" contains instructions written in machine code, and the CPU converts the machine code into an instruction. 
+
