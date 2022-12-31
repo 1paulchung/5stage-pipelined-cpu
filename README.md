@@ -1,6 +1,6 @@
 # 5stage-pipelined-cpu
 
-Five-stage pipelined CPU written in SystemVerilog. The image below shows the components and the five stages. Not pictured in the image is a control system that determines the control signals. 
+Five-stage pipelined CPU written in SystemVerilog. The image below shows the components and the five stages. Not pictured in the image is a control system that determines the control signals. The dotted lines indicate the pipeline registers that hold data for the respective stage.
 
 ![image](https://user-images.githubusercontent.com/72935428/210109509-f4e97ad3-6d55-41d6-824c-8d7d5b98858c.png)
 
